@@ -11,12 +11,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using Game;
 
 namespace Game.ModCore
 {
 
-    [AttributeUsage(AttributeTargets.All, AllowMultiple = false)]
-    public class Detour : Attribute
+    internal static class Detour 
     {
         private static FieldInfo coroutineField = typeof(Coroutines).GetField("instance", BindingFlags.Static | BindingFlags.NonPublic);
         private static string AssemblyName => ((IEnumerable<string>)Assembly.GetAssembly(typeof(Detour)).FullName.Split(',')).First<string>();
@@ -30,20 +30,18 @@ namespace Game.ModCore
             yield return (object)new WaitForSecondsRealtime(Rng.URange(0.5f, 1f));
             UIPopupWidget.Spawn(icon, title, text);
         }
-        private List<FieldInfo> field = new List<FieldInfo>();
-        private List<MethodInfo> methods = new List<MethodInfo>();
-
-        [AttributeUsage(AttributeTargets.All, AllowMultiple = true)]
-        public class AddObjectToDetour : Attribute{
+        /*
+        public void addfield(FieldInfo info){field.Add(info);}
+        [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
+        public class AddObject : Attribute{
+            public AddObjectAttribute() => ;
         }
-        //[RuntimeInitializeOnLoadMethod]
-        //private static void init() => Detour.Inject();
-
+        */
         public static void Inject()
         {
             try
             {
-                if (!Detour.DoInject())
+                if (true)//!Detour.DoInject())
                     Detour.Warning("[" + Detour.AssemblyName + "] Failed to inject properly: method not found");
                 else
                     Detour.Info("[" + Detour.AssemblyName + "] Detour complete.");
@@ -56,24 +54,84 @@ namespace Game.ModCore
             }
         }
 
+        [RuntimeInitializeOnLoadMethod]
+        private static void init()
+        {
+            //runcheck();
+            
+            D.Warn("making trigger for detour");
+            Action init = delegate() {Detour.runcheck();};
+            Ready.WhenCore(init);
+            
+        }
+        public static void runcheck()
+        {
+            
+            D.Warn("triggered check. running");
+            Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            foreach (Assembly code in assemblies)
+            {
+                if (!(code == (Assembly)null))
+                {
+                    Type[] types = code.GetTypes();
+                    if (types.Length != 0)
+                    {
+                        Type[] array2 = types;
+                        foreach (Type type in array2)
+                        {
+                            MethodInfo[] methods = type.GetMethods(BindingFlags.Static | BindingFlags.Public);
+                            foreach(MethodInfo methodinfo in methods){
+                                
+                                foreach (Attribute attribute in methodinfo.GetCustomAttributes())
+                                {
+                                    if(attribute is injectAttribute){
+                                        try
+                                        {
+                                            methodinfo.Invoke(null, null);
+                                            D.Warn("detected mathod = "+((injectAttribute)attribute).test.ToString() );
+                                        }
+                                        catch (System.Exception ex)
+                                        {
+                                            D.Warn("failed to invoke on runtime {0}. mod {1}");
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        private static void test(){
+
+        }
+/*
         private static bool DoInject()
         {
             List<MethodInfo> methodInfoList1 = new List<MethodInfo>();
             List<MethodInfo> methodInfoList2 = new List<MethodInfo>();
-            BindingFlags bindingAttr1 = BindingFlags.Instance | BindingFlags.Public;
-            BindingFlags bindingAttr2 = BindingFlags.Instance | BindingFlags.NonPublic;
-            BindingFlags bindingAttr3 = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+            BindingFlags[] bindall = new BindingFlags[3] {
+                BindingFlags.Instance | BindingFlags.Public,
+                BindingFlags.Instance | BindingFlags.NonPublic,
+                BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic};
             System.Type type1 = typeof(CrafterComp);
             System.Type type2 = typeof(CrafterCompModding);
             MethodInfo[] methods = type1.GetMethods();
             string[] list = new string[] { "OnLateReady", "OnSave", "OnLoad", "RebuildIngredientsReq", "ProvideRequestedMat", "SpawnCraftable", "SwitchToCrafting", "StopProducing" };
             foreach (string name in list)
             {
-                methodInfoList1.Add(type1.GetMethod(name, bindingAttr1));
-                methodInfoList2.Add(type2.GetMethod(name, bindingAttr3));
+                foreach (BindingFlags attr in bindall)
+                {
+                    var add2 = type2.GetMethod(name, attr);
+                    var add1 = type1.GetMethod(name, attr);
+                    if (add1 is not null) methodInfoList1.Add(add1);
+                    if (add2 is not null) methodInfoList2.Add(add2);
+                }
             }
 
             Debug.GameStateDebug.print(methodInfoList1);
+            
             methodInfoList1.Add(type1.GetMethod("OnLateReady", bindingAttr1));
             methodInfoList2.Add(type2.GetMethod("OnLateReady", bindingAttr3));
             methodInfoList1.Add(type1.GetMethod("OnSave", bindingAttr1));
@@ -90,6 +148,7 @@ namespace Game.ModCore
             methodInfoList2.Add(type2.GetMethod("SwitchToCrafting", bindingAttr3));
             methodInfoList1.Add(type1.GetMethod("StopProducing", bindingAttr1));
             methodInfoList2.Add(type2.GetMethod("StopProducing", bindingAttr3));
+            
             if (methodInfoList1.Count != methodInfoList2.Count)
                 return false;
             for (int index = 0; index < methodInfoList1.Count; ++index)
@@ -102,7 +161,7 @@ namespace Game.ModCore
             }
             return true;
         }
-
+*/
         public static unsafe void DoDetour(MethodInfo source, MethodInfo destination)
         {
             if (IntPtr.Size == 8)
