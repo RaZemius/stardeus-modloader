@@ -1,23 +1,22 @@
-
-using Game.Components;
-using Game.Constants;
-using Game.Rendering;
-using Game.UI;
-using KL.Randomness;
-using KL.Utils;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using UnityEngine;
-using Game;
 
-namespace Game.ModCore{
-    
+namespace Game.ModCore
+{
+
     [AttributeUsage(System.AttributeTargets.All, Inherited = false, AllowMultiple = true)]
-    public class injectAttribute : Attribute{
+    public class injectAttribute : Attribute
+    {
+        
+        public Type targetType;
+        public string methodName;
+        public BindingFlags methodFlags;
         public bool test;
-        public injectAttribute() => test = true;
+        public injectAttribute(Type target, BindingFlags flags = BindingFlags.Static | BindingFlags.Public, string name = "" )
+        {
+            targetType = target;
+            methodFlags = flags;
+            methodName = name;
+        }
     }
 }

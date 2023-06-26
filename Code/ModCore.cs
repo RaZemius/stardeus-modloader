@@ -11,7 +11,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEngine;
-using Game;
 
 namespace Game.ModCore
 {
@@ -66,7 +65,7 @@ namespace Game.ModCore
         }
         public static void runcheck()
         {
-            
+            List<MethodInfo> list = new List<MethodInfo>(); 
             D.Warn("triggered check. running");
             Assembly[] assemblies = AppDomain.CurrentDomain.GetAssemblies();
             foreach (Assembly code in assemblies)
@@ -88,12 +87,12 @@ namespace Game.ModCore
                                         try
                                         {
                                             methodinfo.Invoke(null, null);
-                                            D.Warn("detected mathod = "+((injectAttribute)attribute).test.ToString() );
+                                            D.Warn("detected method = "+((injectAttribute)attribute).test.ToString());
+                                            list.Add(methodinfo);
                                         }
                                         catch (System.Exception ex)
                                         {
                                             D.Warn("failed to invoke on runtime {0}. mod {1}");
-                                            break;
                                         }
                                     }
                                 }
@@ -102,8 +101,17 @@ namespace Game.ModCore
                     }
                 }
             }
+            foreach(MethodInfo item in list){
+                D.Warn(item.ToString());
+            }
+            injectall(list);
         }
-        private static void test(){
+        private static void injectall(List<MethodInfo> list){
+            foreach(MethodInfo method in list){
+                injectAttribute targ = 
+                ((injectAttribute)method.GetCustomAttribute(typeof(injectAttribute)));
+                DoDetour(method, targ.targetType.GetMethod(targ.methodName));
+            }
 
         }
 /*
