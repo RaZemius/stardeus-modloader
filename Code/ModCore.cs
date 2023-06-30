@@ -1,5 +1,4 @@
-
-using Game.Components;
+﻿using Game.Components;
 using Game.Constants;
 using Game.Rendering;
 using Game.UI;
@@ -47,14 +46,15 @@ namespace Game.ModCore
                     MethodInfo[] methods = type.GetMethods();
                     foreach (MethodInfo methodinfo in methods)
                     {
-                        Attribute attribute = methodinfo.GetCustomAttribute(typeof(injectAttribute));
+                        InjectAttribute attribute = methodinfo.GetCustomAttribute<InjectAttribute>();
+                        if (attribute == null) continue;
                         try
                         {
                             D.Warn("detected class target = " +
-                            ((injectAttribute)attribute).targetType.ToString() +
-                            "of " +
-                            ((injectAttribute)attribute).methodName);
-                            methodinfo.Invoke(null, null);
+                            attribute.targetType.ToString() +
+                            "." +
+                            attribute.methodName);
+                            //methodinfo.Invoke(null, null);
                             list.Add(methodinfo);
                         }
                         catch
@@ -79,11 +79,17 @@ namespace Game.ModCore
             List<string> log = new List<string>();
             foreach (MethodInfo method in list)
             {
-                injectAttribute targ =
-                ((injectAttribute)method.GetCustomAttribute(typeof(injectAttribute)));
+                InjectAttribute targ =
+                ((InjectAttribute)method.GetCustomAttribute(typeof(InjectAttribute)));
                 try
                 {
-                    DoDetour(method, targ.targetType.GetMethod(targ.methodName));
+                    MethodInfo target = targ.targetType.GetMethod(targ.methodName, targ.methodFlags);
+                    if (target == null)
+                    {
+                        D.Err(String.Format("Cannot find target method! [{0}.{1} {2}]", targ.targetType, targ.methodName, targ.methodFlags));
+                        continue;
+                    }
+                    DoDetour(target,method);
                 }
                 catch (Exception ex)
                 {
