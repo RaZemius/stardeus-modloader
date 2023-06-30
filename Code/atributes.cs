@@ -12,7 +12,7 @@ namespace Game.ModCore
         public string methodName;
         public BindingFlags methodFlags;
         public bool test;
-        public injectAttribute(Type target, BindingFlags flags = BindingFlags.Static | BindingFlags.Public, string name = "" )
+        public injectAttribute(Type target,  string name , BindingFlags flags = BindingFlags.Static | BindingFlags.Public)
         {
             targetType = target;
             methodFlags = flags;
