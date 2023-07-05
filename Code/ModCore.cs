@@ -48,25 +48,43 @@ namespace Game.ModCore
                     {
                         InjectAttribute attribute = methodinfo.GetCustomAttribute<InjectAttribute>();
                         if (attribute is null) continue;
-                        try
-                        {
-                            //D.Warn("detected method target = " +
-                            //attribute.targetType.ToString() +
-                            //"." +
-                            //attribute.methodName);
-                            list.Add(methodinfo);
-                        }
-                        catch
-                        {
-                            D.Err("failed to invoke on runtime. mod method" + methodinfo.ToString());
-                        }
-
+                        list.Add(methodinfo);
                     }
                 }
-
-
             }
-            injectAttributeall(list);
+            list = chkConflicts(list);
+            if (list is List<MethodInfo>)
+            {
+                injectAttributeall(list);
+            }
+            else
+            {
+                D.Err("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+                D.Err("injecting stoped due to error!");
+                return;
+            }
+        }
+        private static List<MethodInfo> chkConflicts(List<MethodInfo> list)
+        {
+
+            bool conflict = false;
+            Dictionary<MethodInfo, string> unique = new Dictionary<MethodInfo, string>();
+            foreach (MethodInfo item in list)
+            {
+                if (unique[item] == null) unique[item] = item.ToString();
+                else {D.Err("method conflict =" + unique[item]); conflict = true;}
+            }
+            //TODO config check for ignoring conflicts
+            if (conflict)
+            {
+                list = new List<MethodInfo>();
+                foreach (var item in unique) list.Add(item.Key);
+                return list;
+            }
+            else
+            {
+                return list;
+            }
         }
         private static void injectAttributeall(List<MethodInfo> list)
         {
@@ -86,7 +104,7 @@ namespace Game.ModCore
                         ));
                         continue;
                     }
-                    DoDetour(target,method);
+                    DoDetour(target, method);
                 }
                 catch (Exception ex)
                 {
