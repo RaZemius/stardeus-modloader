@@ -1,34 +1,39 @@
-﻿using Game.Components;
-using Game.Constants;
-using Game.Rendering;
-using Game.UI;
-using KL.Randomness;
+﻿using System.IO;
 using KL.Utils;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using UnityEngine;
+using Newtonsoft.Json;
 
 namespace Game.ModCore
 {
 
     internal static class Detour
     {
-        private static FieldInfo coroutineField = typeof(Coroutines).GetField("instance", BindingFlags.Static | BindingFlags.NonPublic);
-        private static string AssemblyName => ((IEnumerable<string>)Assembly.GetAssembly(typeof(Detour)).FullName.Split(',')).First<string>();
-        private static Coroutines GetCoroutines() => (Coroutines)Detour.coroutineField.GetValue((object)null);
-        /*
-        public void addfield(FieldInfo info){field.Add(info);}
-        [AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-        public class AddObject : Attribute{
-            public AddObjectAttribute() => ;
-        }
-        */
+        private static LogWriter log;
+        private static string _path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
+        "\\..\\LocalLow\\Kodo Linija\\Stardeus\\Mods\\DetourCoreLib\\config.json";
+        private static Config _conf;
+
         [RuntimeInitializeOnLoadMethod]
         private static void init()
         {
+            if (!File.Exists(_path))
+            {
+                D.Warn("config not found creating");
+                _conf = new Config();
+                string file = JsonConvert.SerializeObject(_conf);
+                File.WriteAllText(_path, file);
+            }
+            else
+            {
+                D.Warn("reading confs");
+                _conf = JsonConvert.DeserializeObject<Config>(File.ReadAllText(_path));
+            }
+
+            if (_conf.debug_logging == true) log = new LogWriter(_path);
+
             D.Warn("making trigger for detour");
             Action init = delegate () { Detour.runcheck(); };
             Ready.WhenCore(init);
@@ -72,19 +77,17 @@ namespace Game.ModCore
             foreach (MethodInfo item in list)
             {
                 if (unique[item] == null) unique[item] = item.ToString();
-                else {D.Err("method conflict =" + unique[item]); conflict = true;}
+                else { D.Err("method conflict = " + unique[item]); conflict = true; }
             }
-            //TODO config check for ignoring conflicts
             if (conflict)
             {
+                if (_conf.ignore_conflicts) 
+                { D.Warn("ignoring conflits set into configs"); return list; }
                 list = new List<MethodInfo>();
                 foreach (var item in unique) list.Add(item.Key);
-                return list;
             }
-            else
-            {
-                return list;
-            }
+            return list;
+
         }
         private static void injectAttributeall(List<MethodInfo> list)
         {
