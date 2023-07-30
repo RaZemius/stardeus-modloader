@@ -49,6 +49,7 @@ namespace Game.Console
         {
             if (args.HasArgument(2))
             {
+                try{
                 //error not going to next suggestion after creation list with matches by tabing 
                 if (items.Count == 0)
                 {
@@ -58,6 +59,7 @@ namespace Game.Console
                 if (Strings.Autocomplete(args.Arguments[2], items) == items[0] && !Regex .IsMatch(items[suggestion],args.Arguments[2] ))
                 {
                     D.Warn("no match found");
+                    recalc(args.Arguments[2]);
                     return args.Arguments[1] + " " + args.Arguments[2];
                 }
                 D.Warn(suggestion.ToString() + " "+ items.Count.ToString());
@@ -72,6 +74,10 @@ namespace Game.Console
                     recalc(args.Arguments[2]);
                     suggestion = 0;
                     return args.Arguments[1] + " " + items[suggestion];
+                }
+                } catch{
+                    suggestion = 0;
+                    recalc(args.Arguments[2]);
                 }
 
 
