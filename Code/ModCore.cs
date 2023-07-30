@@ -11,7 +11,7 @@ namespace Game.ModCore
 
     internal static class Detour
     {
-        private static LogWriter log;
+        public static LogWriter log;
         private static string _path = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData) +
         "\\..\\LocalLow\\Kodo Linija\\Stardeus\\Mods\\DetourCoreLib\\config.json";
         private static Config _conf;

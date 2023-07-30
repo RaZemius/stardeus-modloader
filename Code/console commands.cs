@@ -10,6 +10,7 @@ using Game.Data;
 using Game;
 using Game.Components;
 using Game.Commands;
+using System.Text.RegularExpressions;
 using System;
 
 namespace Game.Console
@@ -17,6 +18,8 @@ namespace Game.Console
     public class ConsoleCommandCreate : BaseInGameConsoleCommand
     {
         public static GameState s;
+        private int suggestion = 0;
+        List<string> items = new List<string>();
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void load() => ConsoleCommand.Register((ConsoleCommand)new ConsoleCommandCreate());
         protected override Dictionary<string, string> subCommands => new Dictionary<string, string>()
@@ -25,21 +28,58 @@ namespace Game.Console
             {"entity", "spawn"}
         };
 
+        private void recalc(string input)
+        {
+            D.Warn("recalc triggered");
+            items = new List<string>();
+            Regex rule = new Regex(@input);
+            foreach (var i in The.Defs.Defs)
+            {
+                if (!rule.IsMatch(i.Key)) continue;
+                items.Add(i.Key);
+            }
+        }
+        private string End(string text, IEnumerable<string> items){
+            if(text != null || text != string.Empty){
+
+            }
+            return null;
+        }
         public override string Autocomplete(ConsoleCommandArguments args)
         {
             if (args.HasArgument(2))
             {
-                List<string> items = new List<string>() { "" };
-                foreach (var i in The.Defs.Defs)
+                //error not going to next suggestion after creation list with matches by tabing 
+                if (items.Count == 0)
                 {
-                    items.Add(i.Key);
+                    recalc(args.Arguments[2]);
                 }
-                return args.GetString(1) + " " + Strings.Autocomplete(args.GetString(2), items);
+                D.Warn(items[suggestion]);
+                if (Strings.Autocomplete(args.Arguments[2], items) == items[0] && !Regex .IsMatch(items[suggestion],args.Arguments[2] ))
+                {
+                    D.Warn("no match found");
+                    return args.Arguments[1] + " " + args.Arguments[2];
+                }
+                D.Warn(suggestion.ToString() + " "+ items.Count.ToString());
+                if (suggestion >= items.Count-1) suggestion = 0;
+                if (items[suggestion] == args.Arguments[2])
+                {
+                    suggestion++;
+                    return args.Arguments[1] + " " + items[suggestion];
+                }
+                else
+                {
+                    recalc(args.Arguments[2]);
+                    suggestion = 0;
+                    return args.Arguments[1] + " " + items[suggestion];
+                }
+
+
             }
             if (args.HasArgument(1))
             {
-                List<string> items = new List<string>() { "list", "entity" };
-                return Strings.Autocomplete(args.GetString(1), items);
+                List<string> commands = new List<string>() { "list", "entity" };
+                return Strings.Autocomplete(args.GetString(1), commands);
             }
             return "";
 
@@ -52,12 +92,14 @@ namespace Game.Console
 
         protected ConsoleCommandResult spawn(ConsoleCommandArguments args)
         {
+
+            List<string> items = new List<string>();
             Vector2 pos;
             int length = 1;
-            string def = args.Arguments[2];
 
             if (args.Arguments.Length < 3)
                 return this.Error("create had not enought args!");
+            string def = args.Arguments[2];
 
             if (The.Defs.Defs[def] == null)
                 return this.Error("no such entity or not entity " + args.Arguments[2]);
@@ -74,15 +116,18 @@ namespace Game.Console
             {
                 for (int i = 0; i < length; i++)
                 {
+
                     The.R.State.Objs.Create(pos, The.Defs.Defs[def]);
                 }
             }
             else
             {
-
                 for (int i = 0; i < length; i++)
                 {
-                    new CmdSpawnBeing(pos, The.Defs.Defs[def], true).Execute(The.R.State);
+                    CmdSpawnBeing cmd =
+                    new CmdSpawnBeing(pos, The.Defs.Defs[def], true);
+                    cmd.Execute(The.R.State);
+                    cmd = null;
                 }
 
             }
