@@ -57,7 +57,7 @@ namespace Game.ModCore
                     }
                 }
             }
-            list = chkConflicts(list);
+            //list = chkConflicts(list);
             if (list is List<MethodInfo>)
             {
                 injectAttributeall(list);
@@ -65,7 +65,7 @@ namespace Game.ModCore
             else
             {
                 D.Err("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
-                D.Err("injecting stoped due to error!");
+                D.Err("<!injecting stoped due to error!>");
                 return;
             }
         }
@@ -84,7 +84,7 @@ namespace Game.ModCore
                 if (_conf.ignore_conflicts) 
                 { D.Warn("ignoring conflits set into configs"); return list; }
                 list = new List<MethodInfo>();
-                foreach (var item in unique) list.Add(item.Key);
+                foreach (KeyValuePair<MethodInfo, string> item in unique) list.Add(item.Key);
             }
             return list;
 

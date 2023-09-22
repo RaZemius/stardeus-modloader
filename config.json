@@ -1,1 +1,4 @@
-{"ignore_conflicts":false,"debug_logging":false}
+{
+    "ignore_conflicts": false,
+    "debug_logging": false
+}

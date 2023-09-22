@@ -93,7 +93,8 @@ namespace Game.Console
         public override void Initialize()
         {
             this.Name = "create";
-            this.HelpLine = "summon any creature or item in game by id\n list \n * return all entity that can be summoned in world\n entity {<Def> id, <int> stack, <vector2> {<int> x, <int> y} OR pos = mouse_pos }\n * used to summon any creature or object... whatever you creating in mod";
+            this.HelpLine = 
+            "summon any creature or item in game by id\n list \n * return all entity that can be summoned in world\n entity {<Def> id, <int> stack, <vector2> {<int> x, <int> y} OR pos = mouse_pos }\n * used to summon any creature or object... whatever you creating in mod";
         }
 
         protected ConsoleCommandResult spawn(ConsoleCommandArguments args)
